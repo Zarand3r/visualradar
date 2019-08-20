@@ -1,1 +1,0 @@
-#for better design, define all constants such as world dimensions and camera calibration here, then import into dependent files
