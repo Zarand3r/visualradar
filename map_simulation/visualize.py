@@ -45,37 +45,42 @@ def plot_world(surf, figure):
 
 def plot_camera(snap, figure):
 	(C_x, C_y, C_z) = (snap.X, snap.Y, snap.Z)
-	# (S_x, S_y, S_z) = snap.sensor()
+	(S_x, S_y, S_z) = (snap.S_x, snap.S_y, snap.S_z)
 
 	figure.plot_surface(C_x, C_y, C_z, linewidth=0, antialiased=False)
-	# ax.scatter(S_x, S_y, S_z, color="g", s=20)
+	figure.scatter(S_x, S_y, S_z, color="g", s=20)
+	lines = snap.project_ray()
+	for line in lines:
+		figure.plot(line[0], line[1], line[2])
 
 # def plot_projection(rays, figure):
-# 	S_x,S_y,S_z = sensor()
-# 	W_x,W_y,W_z = surface()
-	
-# 	surf = ax.plot_surface(W_x, W_y, W_z, cmap=cm.magma, linewidth=0, antialiased=False)
+#	visualize point cloud, calculate depth estimate, reconstruct terrain
 
-# 	lines = project_ray(C_x, C_y, C_z, S_x, S_y, S_z)
-# 	for line in lines:
-# 		ax.plot(line[0], line[1], line[2])
+
 
 def render():
-	fig = plt.figure()
-	ax = fig.gca(projection='3d')
-	ax.zaxis.set_major_locator(LinearLocator(10))
-	ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
-	
+	fig = plt.figure(figsize=plt.figaspect(0.5))
+
+	# First Camera
+	# ax1 = fig.gca(projection='3d')
+	ax1 = fig.add_subplot(1, 2, 1, projection='3d')
 	surf1 = world.surface(300,300)
 	snap1 = camera.snap(100, 100, 50, (0,30,0), 20, 30, 30)
-	# rays = reconstruction.project()
-	world1 = plot_world(surf1, ax)
-	plot_camera(snap1, ax)
-	# plot_projection(rays1, ax)
-	set_axes_equal(ax)
+	world1 = plot_world(surf1, ax1)
+	plot_camera(snap1, ax1)
+	set_axes_equal(ax1)
 	fig.colorbar(world1, shrink=0.5, aspect=5)
 
-	# visualize point cloud in different figure axis
+	# Visualize point cloud in different figure axis
+	ax2 = fig.add_subplot(1, 2, 2, projection='3d')
+	surf2 = world.surface(300,300)
+	snap2 = camera.snap(100, 100, 50, (0,30,0), 20, 30, 30)
+	world2 = plot_world(surf2, ax2)
+	plot_camera(snap2, ax2)
+	set_axes_equal(ax2)
+	fig.colorbar(world2, shrink=0.5, aspect=5)
+
+
 	plt.show()
 
 if __name__== "__main__":

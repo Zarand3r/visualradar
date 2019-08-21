@@ -23,7 +23,11 @@ class snap:
 		self.X = np.arange(0, width, 1)
 		self.Y = np.arange(0, length, 1)
 		self.Z = []
+		self.S_x = 0
+		self.S_y = 0
+		self.S_z = 0
 		self.orient_camera()
+		self.orient_sensor()
 
 
 	def get_rotation_matrix(self):
@@ -55,4 +59,26 @@ class snap:
 		self.Y=np.reshape(temp[1],size) + offset[1]
 		self.Z=np.reshape(temp[2],size) + offset[2]
 
+	def orient_sensor(self):
+		R_xyz, offset = self.world_to_camera_transform()
+		temp=np.dot(np.transpose(R_xyz), [self.w/2,self.l/2,self.f])
+		self.S_x = temp[0] + offset[0]
+		self.S_y = temp[1] + offset[1]
+		self.S_z = temp[2] + offset[2]
+
+	def project_ray(self):
+		Cx = self.X.flatten()
+		Cy = self.Y.flatten()
+		Cz = self.Z.flatten()
+		ray_list = []
+		for i in range(len(Cx)):
+			slope_xz = (self.S_z-Cz[i])/(self.S_x-Cx[i])
+			slope_yz = (self.S_z-Cz[i])/(self.S_y-Cy[i])
+			delta_x = (-self.S_z/slope_xz)
+			delta_y = (-self.S_z/slope_yz)
+			ray = [[self.S_x, self.S_x+delta_x], [self.S_y, self.S_y+delta_y], [self.S_z, 0]]
+			ray_list.append(ray)
+		return ray_list
+	def project_pixels():
+		return
 
