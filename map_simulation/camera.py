@@ -48,6 +48,8 @@ class snap:
 		R_xyz = self.get_rotation_matrix()
 		offset = [self.X_pos, self.Y_pos, self.Z_pos]
 		return (R_xyz, offset)
+	def camera_to_pixel_transform(self):
+		return
 
 	def orient_camera(self):
 		X, Y = np.meshgrid(self.X, self.Y)

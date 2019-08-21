@@ -43,15 +43,16 @@ def plot_world(surf, figure):
 	return surf
 
 
-def plot_camera(snap, figure):
+def plot_camera(snap, figure, plotrays=True):
 	(C_x, C_y, C_z) = (snap.X, snap.Y, snap.Z)
 	(S_x, S_y, S_z) = (snap.S_x, snap.S_y, snap.S_z)
 
 	figure.plot_surface(C_x, C_y, C_z, linewidth=0, antialiased=False)
 	figure.scatter(S_x, S_y, S_z, color="g", s=20)
-	lines = snap.project_ray()
-	for line in lines:
-		figure.plot(line[0], line[1], line[2])
+	if plotrays:
+		lines = snap.project_ray()
+		for line in lines:
+			figure.plot(line[0], line[1], line[2])
 
 # def plot_projection(rays, figure):
 #	visualize point cloud, calculate depth estimate, reconstruct terrain
@@ -76,7 +77,7 @@ def render():
 	surf2 = world.surface(300,300)
 	snap2 = camera.snap(100, 100, 50, (0,30,0), 20, 30, 30)
 	world2 = plot_world(surf2, ax2)
-	plot_camera(snap2, ax2)
+	plot_camera(snap2, ax2, plotrays=False)
 	set_axes_equal(ax2)
 	fig.colorbar(world2, shrink=0.5, aspect=5)
 
