@@ -23,24 +23,24 @@ class snap:
 		self.phi = math.radians(orientation[1])
 		self.gamma = math.radians(orientation[2])
 		self.sensor = []
-		self.focal = 0
+		self.focal = specs["focal"]
 		self.X = []
 		self.Y = []
 		self.Z = []
 		self.source_x = 0
 		self.source_y = 0
-		self.source_z = 0
-		self.create_sensor(specs)
+		self.source_z = self.focal
+		self.create_sensor(**specs)
 		self.orient_camera()
-		self.orient_sensor()
 
-	def create_sensor(**specs):
+	def create_sensor(self, **specs):
+		# define pixel grid from specs
 		xmax = specs["xmax"]
 		ymax = specs["ymax"]
-		self.focal = specs["focal"]
 		X_pixel = np.arange(0, xmax, 1)
 		Y_pixel = np.arange(0, xmax, 1)
-		# do stuff
+		# create sensor by transforming pixel grid to camera
+		# transform source coordinates too (0,0,focal) gets transformed to origin of the camera coordinate
 		self.X = X_pixel
 		self.Y = X_pixel
 
@@ -49,17 +49,14 @@ class snap:
 		size = X.shape
 		Z = np.zeros(size) 
 		R_xyz, offset = self.world_to_camera_transform()
-		temp=np.dot(np.transpose(R_xyz), [X.flatten(),Y.flatten(),Z.flatten()])   
-		self.X=np.reshape(temp[0],size) + offset[0]
-		self.Y=np.reshape(temp[1],size) + offset[1]
-		self.Z=np.reshape(temp[2],size) + offset[2]
-
-	def orient_sensor(self):
-		R_xyz, offset = self.world_to_camera_transform()
-		temp=np.dot(np.transpose(R_xyz), [self.w/2,self.l/2,self.f])
-		self.S_x = temp[0] + offset[0]
-		self.S_y = temp[1] + offset[1]
-		self.S_z = temp[2] + offset[2]
+		temp_sensor=np.dot(np.transpose(R_xyz), [X.flatten(),Y.flatten(),Z.flatten()])   
+		self.X=np.reshape(temp_sensor[0],size) + offset[0]
+		self.Y=np.reshape(temp_sensor[1],size) + offset[1]
+		self.Z=np.reshape(temp_sensor[2],size) + offset[2]
+		temp_source=np.dot(np.transpose(R_xyz), [self.source_x,self.source_y,self.source_z])
+		self.source_x = temp_source[0] + offset[0]
+		self.source_y = temp_source[1] + offset[1]
+		self.source_z = temp_source[2] + offset[2]
 
 	#####======TRANSFORMS======#####
 
@@ -91,11 +88,11 @@ class snap:
 		Cz = self.Z.flatten()
 		ray_list = []
 		for i in range(len(Cx)):
-			slope_xz = (self.S_z-Cz[i])/(self.S_x-Cx[i])
-			slope_yz = (self.S_z-Cz[i])/(self.S_y-Cy[i])
-			delta_x = (-self.S_z/slope_xz)
-			delta_y = (-self.S_z/slope_yz)
-			ray = [[self.S_x, self.S_x+delta_x], [self.S_y, self.S_y+delta_y], [self.S_z, 0]]
+			slope_xz = (self.source_z-Cz[i])/(self.source_x-Cx[i])
+			slope_yz = (self.source_z-Cz[i])/(self.source_y-Cy[i])
+			delta_x = (-self.source_z/slope_xz)
+			delta_y = (-self.source_z/slope_yz)
+			ray = [[self.source_x, self.source_x+delta_x], [self.source_y, self.source_y+delta_y], [self.source_z, 0]]
 			ray_list.append(ray)
 		return ray_list
 	# Extract the point cloud from the projected pixels in a separate script for ray projection

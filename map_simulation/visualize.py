@@ -25,15 +25,12 @@ def set_axes_equal(figure):
 		figure.get_ylim(),
 		figure.get_zlim(),
 	])
-	print(limits)
 	radius = 0.5 * np.max(np.abs(limits))
-	print(radius)
 	origin = np.mean(limits, axis=1)
 	figure.set_xlim([origin[0] - radius, origin[0] + radius])
 	figure.set_ylim([origin[1] - radius, origin[1] + radius])
 	# ax.set_zlim([origin[2] - radius, origin[2] + radius])
 	figure.set_zlim([0, 2*radius])
-	print(radius)
 
 def plot_world(surf, figure):
 	(W_x, W_y, W_z) = (surf.X, surf.Y, surf.Z)
@@ -45,10 +42,10 @@ def plot_world(surf, figure):
 
 def plot_camera(snap, figure, plotrays=True):
 	(C_x, C_y, C_z) = (snap.X, snap.Y, snap.Z)
-	(S_x, S_y, S_z) = (snap.S_x, snap.S_y, snap.S_z)
+	(source_x, source_y, source_z) = (snap.source_x, snap.source_y, snap.source_z)
 
 	figure.plot_surface(C_x, C_y, C_z, linewidth=0, antialiased=False)
-	figure.scatter(S_x, S_y, S_z, color="g", s=20)
+	figure.scatter(source_x, source_y, source_z, color="g", s=20)
 	if plotrays:
 		lines = snap.project_ray()
 		for line in lines:
@@ -62,11 +59,13 @@ def plot_camera(snap, figure, plotrays=True):
 def render():
 	fig = plt.figure(figsize=plt.figaspect(0.5))
 
+	specs = {"xmax":20, "ymax":20, "focal":20}
 	# First Camera
 	# ax1 = fig.gca(projection='3d')
 	ax1 = fig.add_subplot(1, 2, 1, projection='3d')
+	orientation1=(0,30,0)
 	surf1 = world.surface(300,300)
-	snap1 = camera.snap(100, 100, 50, (0,30,0), 20, 30, 30)
+	snap1 = camera.snap(100, 100, 50, *orientation1, **specs)
 	world1 = plot_world(surf1, ax1)
 	plot_camera(snap1, ax1)
 	set_axes_equal(ax1)
@@ -74,10 +73,11 @@ def render():
 
 	# Visualize point cloud in different figure axis
 	ax2 = fig.add_subplot(1, 2, 2, projection='3d')
+	orientation2=(0,30,0)
 	surf2 = world.surface(300,300)
-	snap2 = camera.snap(100, 100, 50, (0,30,0), 20, 30, 30)
+	snap2 = camera.snap(100, 100, 50, *orientation2, **specs)
 	world2 = plot_world(surf2, ax2)
-	plot_camera(snap2, ax2, plotrays=False)
+	plot_camera(snap2, ax2, False)
 	set_axes_equal(ax2)
 	fig.colorbar(world2, shrink=0.5, aspect=5)
 
