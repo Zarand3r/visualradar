@@ -39,6 +39,7 @@ class snap:
 		ymax = specs["ymax"]
 		X_pixel = np.arange(0, xmax, 1)
 		Y_pixel = np.arange(0, xmax, 1)
+		# use pixel_to_camera_transform
 		# create sensor by transforming pixel grid to camera
 		# transform source coordinates too (0,0,focal) gets transformed to origin of the camera coordinate
 		self.X = X_pixel
@@ -78,8 +79,9 @@ class snap:
 		R_xyz = self.get_rotation_matrix()
 		offset = [self.X_pos, self.Y_pos, self.Z_pos]
 		return (R_xyz, offset)
-	def camera_to_pixel_transform(self):
-		return
+	def pixel_to_camera_transform(self):
+		matrix = [[],[],[]]
+		return 
 
 	#####======Projection======#####
 	def project_ray(self):
@@ -96,5 +98,5 @@ class snap:
 			ray_list.append(ray)
 		return ray_list
 	# Extract the point cloud from the projected pixels in a separate script for ray projection
-	# Feed ray_list along with the surface information into the ray projection script 
+	# Feed ray_list along with the surface information into the ray projection script. Handle infinite slope by taking the point directly below
 	# Call this ray projection script in visualize.py, after creating the camera, the surfaces, and generating the ray_list 

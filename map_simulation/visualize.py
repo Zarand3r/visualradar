@@ -34,8 +34,9 @@ def set_axes_equal(figure):
 
 def plot_world(surf, figure):
 	(W_x, W_y, W_z) = (surf.X, surf.Y, surf.Z)
-	figure.set_xlim([surf.xmin, surf.xmax])
-	figure.set_ylim([surf.ymin, surf.ymax])
+	# figure.set_xlim([surf.xmin, surf.xmax])
+	# figure.set_ylim([surf.ymin, surf.ymax])
+
 	surf = figure.plot_surface(W_x, W_y, W_z, cmap=cm.magma, linewidth=0, antialiased=False)
 	return surf
 
@@ -74,7 +75,7 @@ def render():
 	# Visualize point cloud in different figure axis
 	ax2 = fig.add_subplot(1, 2, 2, projection='3d')
 	orientation2=(0,30,0)
-	surf2 = world.surface(300,300)
+	surf2 = world.yz_plane(100,100)
 	snap2 = camera.snap(100, 100, 50, *orientation2, **specs)
 	world2 = plot_world(surf2, ax2)
 	plot_camera(snap2, ax2, False)
