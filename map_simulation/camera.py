@@ -23,13 +23,13 @@ class snap:
 		self.phi = math.radians(orientation[1])
 		self.gamma = math.radians(orientation[2])
 		self.sensor = []
-		self.focal = specs["focal"]
+		self.specs = specs
 		self.X = []
 		self.Y = []
 		self.Z = []
 		self.source_x = 0
 		self.source_y = 0
-		self.source_z = self.focal
+		self.source_z = 0
 		self.create_sensor(**specs)
 		self.orient_camera()
 
@@ -38,22 +38,33 @@ class snap:
 		xmax = specs["xmax"]
 		ymax = specs["ymax"]
 		X_pixel = np.arange(0, xmax, 1)
-		Y_pixel = np.arange(0, xmax, 1)
-		# use pixel_to_camera_transform
-		# create sensor by transforming pixel grid to camera
-		# transform source coordinates too (0,0,focal) gets transformed to origin of the camera coordinate
-		self.X = X_pixel
-		self.Y = X_pixel
-
-	def orient_camera(self):
-		X, Y = np.meshgrid(self.X, self.Y)
+		Y_pixel = np.arange(0, ymax, 1)
+		X, Y = np.meshgrid(X_pixel, Y_pixel)
+		transform = self.pixel_to_camera_transform()
 		size = X.shape
-		Z = np.zeros(size) 
+		axis = (np.zeros(size)+1).flatten()
+		sensor = np.dot(transform, [X.flatten(), Y.flatten(), axis])
+		self.X = sensor[0]
+		self.Y = sensor[1]
+
+		source_x = specs["focalx"]
+		source_y = specs["focaly"]
+		source_z = specs["focalz"]
+		source = np.dot(transform, [source_x,source_y,1])
+		self.source_x = source[0]
+		self.source_y = source[1]
+		self.source_z = source_z
+		print(transform)
+		
+	def orient_camera(self):
+		size = self.X.shape
+		self.Z = np.zeros(size) 
 		R_xyz, offset = self.world_to_camera_transform()
-		temp_sensor=np.dot(np.transpose(R_xyz), [X.flatten(),Y.flatten(),Z.flatten()])   
+		temp_sensor=np.dot(np.transpose(R_xyz), [self.X.flatten(),self.Y.flatten(),self.Z.flatten()])   
 		self.X=np.reshape(temp_sensor[0],size) + offset[0]
 		self.Y=np.reshape(temp_sensor[1],size) + offset[1]
 		self.Z=np.reshape(temp_sensor[2],size) + offset[2]
+
 		temp_source=np.dot(np.transpose(R_xyz), [self.source_x,self.source_y,self.source_z])
 		self.source_x = temp_source[0] + offset[0]
 		self.source_y = temp_source[1] + offset[1]
@@ -79,9 +90,14 @@ class snap:
 		R_xyz = self.get_rotation_matrix()
 		offset = [self.X_pos, self.Y_pos, self.Z_pos]
 		return (R_xyz, offset)
+
+	def camera_to_pixel_transform(self):
+		K = np.array([[self.specs["focalx"],0,self.specs["xmax"]/2],[0,self.specs["focaly"],self.specs["ymax"]/2],[0,0,1]])
+		return K
+
 	def pixel_to_camera_transform(self):
-		matrix = [[],[],[]]
-		return 
+		K = self.camera_to_pixel_transform()
+		return np.linalg.inv(K)
 
 	#####======Projection======#####
 	def project_ray(self):

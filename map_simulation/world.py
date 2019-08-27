@@ -6,10 +6,10 @@ import random
 
 class surface:
 	def __init__(self, boundX, boundY):
-		self.xmin = 0
-		self.ymin = 0
-		self.xmax = boundX
-		self.ymax = boundY
+		self.xmin = -1*boundX/2
+		self.ymin = -1*boundY/2
+		self.xmax = boundX/2
+		self.ymax = boundY/2
 		self.X = np.arange(self.xmin, self.xmax, 1)
 		self.Y = np.arange(self.ymin, self.ymax, 1)
 		self.Z = []
@@ -40,7 +40,7 @@ class surface:
 # 		size = self.X.shape
 # 		self.Z = np.zeros(size)
 
-
+# boundx is length in x dimension, boundy is length in y dimension, boundz is length in z dimension
 class xy_plane:
 	def __init__(self, boundX, boundY, X_pos = 0, Y_pos = 0, Z_pos = 0):
 		self.xmin = -1*boundX/2
@@ -60,9 +60,9 @@ class xy_plane:
 
 class xz_plane:
 	def __init__(self, boundX, boundZ, X_pos = 0, Y_pos = 0, Z_pos = 0):
-		self.xmin = -1*boundY/2
+		self.xmin = -1*boundX/2
 		self.zmin = 0
-		self.xmax = boundY/2
+		self.xmax = boundX/2
 		self.zmax = boundZ
 		self.X = np.arange(self.xmin, self.xmax, 1) + X_pos
 		self.Y = Y_pos
