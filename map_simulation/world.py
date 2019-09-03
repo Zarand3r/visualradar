@@ -4,7 +4,7 @@ import math
 import random
 
 
-class surface:
+class ground:
 	def __init__(self, boundX, boundY):
 		self.xmin = -1*boundX/2
 		self.ymin = -1*boundY/2
@@ -22,25 +22,6 @@ class surface:
 		self.Z = np.zeros(size)
 		print(self.Z.shape)
 
-# class surface:
-# 	def __init__(self, boundX, boundY, func):
-# 		self.xmin = 0
-# 		self.ymin = 0
-# 		self.xmax = boundX
-# 		self.ymax = boundY
-# 		self.X = np.arange(self.xmin, self.xmax, 1)
-# 		self.Y = np.arange(self.ymin, self.ymax, 1)
-# 		self.Z = []
-#		#	self.Z = func(self.X, self.Y)
-# 		self.create()
-
-
-# 	def create(self):
-# 		self.X, self.Y = np.meshgrid(self.X, self.Y)
-# 		size = self.X.shape
-# 		self.Z = np.zeros(size)
-
-# boundx is length in x dimension, boundy is length in y dimension, boundz is length in z dimension
 class xy_plane:
 	def __init__(self, boundX, boundY, X_pos = 0, Y_pos = 0, Z_pos = 0):
 		self.xmin = -1*boundX/2
@@ -91,6 +72,55 @@ class yz_plane:
 		self.Y, self.Z = np.meshgrid(self.Y, self.Z)
 		size = self.Y.shape
 		self.X = self.X + np.zeros(size)
+
+class plane:
+	def __init__(self, diag1, diag2): #takes two diagonal points
+		dimensions = [0, 1, 2]
+		excluded_dimension = -1
+		coordinates = []
+		for index, value in enumerate(diag1):
+			if value == diag2[index]:
+				coordinates.append(value)
+				excluded_dimension = index
+				continue
+			if value > diag2[index]:
+				grid = np.arange(diag2[index], value, 1)
+			else:
+				grid = np.arange(value, diag2[index], 1)
+			coordinates.append(grid)
+
+		dimensions.remove(excluded_dimension)
+		coordinates[dimensions[0]], coordinates[dimensions[1]] = np.meshgrid(coordinates[dimensions[0]], coordinates[dimensions[1]])
+		size = coordinates[dimensions[0]].shape
+		coordinates[excluded_dimension] = coordinates[excluded_dimension] + np.zeros(size)
+		self.X = coordinates[0]
+		self.Y = coordinates[1]
+		self.Z = coordinates[2]
+
+def box(point1, point2, point3, point4):
+	ground1 = (point1[0], point1[1], 0)
+	ground2 = (point2[0], point2[1], 0)
+	ground3 = (point3[0], point3[1], 0)
+	ground4 = (point4[0], point4[1], 0)
+	plane1 = plane(ground1, point2) 
+	plane2 = plane(ground2, point3)
+	plane3 = plane(ground3, point4)
+	plane4 = plane(ground4, point1)
+	plane5 = plane(point1, point3)
+	return (plane1, plane2, plane3, plane4, plane5)
+
+		
+def cube(centerX, centerY, side):
+	center1 = (centerX, centerY-side/2, 0)
+	center2 = (centerX-side/2, centerY, 0)
+	center3 = (centerX, centerY+side/2, 0)
+	center4 = (centerX+side/2, centerY, 0)
+	plane1 = xz_plane(side,side,*center1) 
+	plane2 = yz_plane(side,side,*center2)
+	plane3 = xz_plane(side,side,*center3)
+	plane4 = yz_plane(side,side,*center4)
+	plane5 = xy_plane(side,side,centerX,centerY,side)
+	return (plane1, plane2, plane3, plane4, plane5)
 
 
 # class box:

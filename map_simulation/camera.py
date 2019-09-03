@@ -30,8 +30,11 @@ class snap:
 		self.source_x = 0
 		self.source_y = 0
 		self.source_z = 0
+		self.ray_list = []
+		self.rays_to_ground = []
 		self.create_sensor(**specs)
 		self.orient_camera()
+		self.project_ray()
 
 	def create_sensor(self, **specs):
 		# define pixel grid from specs
@@ -44,8 +47,8 @@ class snap:
 		size = X.shape
 		axis = (np.zeros(size)+1).flatten()
 		sensor = np.dot(transform, [X.flatten(), Y.flatten(), axis])
-		self.X = sensor[0]
-		self.Y = sensor[1]
+		self.X = np.reshape(sensor[0],size)
+		self.Y = np.reshape(sensor[1],size)
 
 		source_x = specs["focalx"]
 		source_y = specs["focaly"]
@@ -54,18 +57,17 @@ class snap:
 		self.source_x = source[0]
 		self.source_y = source[1]
 		self.source_z = source_z
-		print(transform)
 		
 	def orient_camera(self):
 		size = self.X.shape
 		self.Z = np.zeros(size) 
 		R_xyz, offset = self.world_to_camera_transform()
-		temp_sensor=np.dot(np.transpose(R_xyz), [self.X.flatten(),self.Y.flatten(),self.Z.flatten()])   
+		temp_sensor=np.dot(R_xyz, [self.X.flatten(),self.Y.flatten(),self.Z.flatten()])   
 		self.X=np.reshape(temp_sensor[0],size) + offset[0]
 		self.Y=np.reshape(temp_sensor[1],size) + offset[1]
 		self.Z=np.reshape(temp_sensor[2],size) + offset[2]
 
-		temp_source=np.dot(np.transpose(R_xyz), [self.source_x,self.source_y,self.source_z])
+		temp_source=np.dot(R_xyz, [self.source_x,self.source_y,self.source_z])
 		self.source_x = temp_source[0] + offset[0]
 		self.source_y = temp_source[1] + offset[1]
 		self.source_z = temp_source[2] + offset[2]
@@ -91,6 +93,11 @@ class snap:
 		offset = [self.X_pos, self.Y_pos, self.Z_pos]
 		return (R_xyz, offset)
 
+	def camera_to_world_transform(self):
+		K,offset = self.world_to_camera_transform()
+		invoffset = -1*offset
+		return np.linalg.inv(K), invoffset
+
 	def camera_to_pixel_transform(self):
 		K = np.array([[self.specs["focalx"],0,self.specs["xmax"]/2],[0,self.specs["focaly"],self.specs["ymax"]/2],[0,0,1]])
 		return K
@@ -104,15 +111,27 @@ class snap:
 		Cx = self.X.flatten()
 		Cy = self.Y.flatten()
 		Cz = self.Z.flatten()
-		ray_list = []
+		self.ray_list = []
+		self.rays_to_ground = []
 		for i in range(len(Cx)):
-			slope_xz = (self.source_z-Cz[i])/(self.source_x-Cx[i])
-			slope_yz = (self.source_z-Cz[i])/(self.source_y-Cy[i])
-			delta_x = (-self.source_z/slope_xz)
-			delta_y = (-self.source_z/slope_yz)
+			delta_x = 0
+			slope_xz = None
+			if self.source_x-Cx[i] != 0:
+				slope_xz = (self.source_z-Cz[i])/(self.source_x-Cx[i])
+				delta_x = (-self.source_z/slope_xz)
+
+			delta_y = 0
+			slope_yz = None
+			if self.source_y-Cy[i] != 0:
+				slope_yz = (self.source_z-Cz[i])/(self.source_y-Cy[i])
+				delta_y = (-self.source_z/slope_yz)
+
+			self.ray_list.append([slope_xz, slope_yz])
 			ray = [[self.source_x, self.source_x+delta_x], [self.source_y, self.source_y+delta_y], [self.source_z, 0]]
-			ray_list.append(ray)
-		return ray_list
+			self.rays_to_ground.append(ray)
+
+	# def trace_ray(self):
+
 	# Extract the point cloud from the projected pixels in a separate script for ray projection
 	# Feed ray_list along with the surface information into the ray projection script. Handle infinite slope by taking the point directly below
 	# Call this ray projection script in visualize.py, after creating the camera, the surfaces, and generating the ray_list 
