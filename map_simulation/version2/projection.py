@@ -3,15 +3,12 @@ from numpy.linalg import multi_dot
 import math
 import random
 
-import os
-import vtk
-from pycaster import pycaster
 
 class pointcloud:
 	def __init__(self, snap):
 		self.snap = snap
 
-	def project_to_plane(self, surfaces, camera_pov=False, convert=False):
+	def project_to_plane(self, *surfaces, camera_pov=True): ########
 		points = []
 		source = [self.snap.source_x, self.snap.source_y, self.snap.source_z]
 		for ray in self.snap.ray_list:
@@ -30,11 +27,9 @@ class pointcloud:
 		points = np.insert(points, 3, 1, axis=1)
 		if camera_pov:
 			self.camera_perspective(points)
-		if convert:
-			return points_to_pointcloud(points)
 		return points
 
-	def penetrate_plane(self, surfaces, camera_pov=True): ########
+	def penetrate_plane(self, *surfaces, camera_pov=True): ########
 		points = []
 		source = [self.snap.source_x, self.snap.source_y, self.snap.source_z]
 		for ray in self.snap.ray_list:
@@ -46,30 +41,21 @@ class pointcloud:
 				if point is not None and point_on_plane(point, *bounds):
 					points.append(point)				
 		points = np.insert(points, 3, 1, axis=1)
+		print(points[1])
 		if camera_pov:
 			self.camera_perspective(points)
 		return points
 
 
-	def project_to_mesh(self, terrain, camera_pov=False, convert=False):
-		points = []
-		source = [self.snap.source_x, self.snap.source_y, self.snap.source_z]
-		for ray in self.snap.rays_to_ground:
-			ray = np.array(ray)
-			caster = pycaster.rayCaster.fromSTL(terrain, scale=1)
-			intersects = caster.castRay(source, ray[:,1])
-			if not intersects:
-				continue
-			closest = closest_point(source, *intersects)
-			points.append(closest)
-		points = np.insert(points, 3, 1, axis=1)
-		if camera_pov:
-			self.camera_perspective(points)
-		if convert:
-			return points_to_pointcloud(points)
-		return points
 
-	def project_to_ground(self, camera_pov=False):
+
+	def project_to_mesh(*surfaces):
+		# define corner/vertex points of the terrain
+		# group vertices in pairs nearest neighbors
+		# detect if the rays given by self.snap.ray_list intersect
+		return 
+
+	def project_to_ground(self, camera_pov=True):
 		points = []
 		for ray in self.snap.rays_to_ground:
 			point = [coord[1] for coord in ray]

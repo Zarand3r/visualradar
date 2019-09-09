@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D  
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
@@ -12,37 +11,16 @@ import world
 import projection
 import reconstruction
 from itertools import product, combinations
-from stl import mesh
 
 
-def set_bounds(figure, floor=False):
+def set_bounds(figure):
 	limits = np.array([
 		figure.get_xlim(),
 		figure.get_ylim(),
 		figure.get_zlim(),
 	])
-
-	lim_min = limits[:,0]
-	lim_max = limits[:,1]
-	radius = np.max(lim_max-lim_min)/2
+	radius = np.max(np.abs(limits))
 	origin = np.mean(limits, axis=1)
-
-	if floor:
-		ground = world.ground(2*lim_max[0], 2*lim_max[1])
-		plot_world(figure, ground)
-
-		limits = np.array([
-		figure.get_xlim(),
-		figure.get_ylim(),
-		figure.get_zlim(),
-		])
-
-		lim_min = limits[:,0]
-		lim_max = limits[:,1]
-		radius = np.max(lim_max-lim_min)/2
-		origin = np.mean(limits, axis=1)
-
-
 
 	xmin = origin[0] - radius
 	xmax = origin[0] + radius
@@ -62,7 +40,6 @@ def set_bounds(figure, floor=False):
 	    if np.sum(np.abs(s-e)) == x[1]-x[0]:
 	        figure.plot3D(*zip(s, e), color="b")
 
-
 def set_axes_equal(figure1, figure2):
 	(xmin,xmax) = figure1.get_xlim()
 	(ymin,ymax) = figure1.get_ylim()
@@ -81,7 +58,7 @@ def set_axes_equal(figure1, figure2):
 
 def plot_world(figure, world):
 	(W_x, W_y, W_z) = (world.X, world.Y, world.Z)
-	world = figure.plot_surface(W_x, W_y, W_z, cmap=cm.cool, linewidth=0, antialiased=False, zorder = 0)
+	world = figure.plot_surface(W_x, W_y, W_z, cmap=cm.cool, linewidth=0, antialiased=False)
 	return world
 
 def plot_surfs(figure, *surfaces):
@@ -164,69 +141,45 @@ def test2():
 	plt.show()
 
 def render():
-
-	terrain = "terrains/griffith.stl"
+	# fig = plt.figure(figsize=plt.figaspect(0.5))
 	fig = plt.figure(figsize=(16, 8))
 	specs = {"xmax":30, "ymax":20, "focalx":15, "focaly":10, "focalz":2} # units of pixel except for focalz ....
 
 	########## First figure axis ##########
 	ax1 = fig.add_subplot(1, 2, 1, projection='3d')
-	# Load the STL files and add the vectors to the plot
-	your_mesh = mesh.Mesh.from_file(terrain)
-	ax1.add_collection3d(mplot3d.art3d.Poly3DCollection(your_mesh.vectors))
-	# Auto scale to the mesh size
-	scale = your_mesh.points.flatten(-1)
-	ax1.auto_scale_xyz(scale, scale, scale)
+	ground = world.ground(100,100)
+	plot_world(ax1, ground)
+	# cube = world.cube(0,0,10)
+	# plot_surfs(ax1, *cube)
 
-	orientation2=(0,0,0)
-	snap1 = camera.snap(20, 20, 20, *orientation2, **specs)
+	box = world.box((50,-50,20),(50,50,20),(30,50,20),(30,-50,20))
+	plot_surfs(ax1, *box)
+
+	orientation2=(0,-20,0)
+	snap1 = camera.snap(20, 0, 50, *orientation2, **specs)
 	plot_camera(ax1, snap1, True)
 	set_bounds(ax1)
+
 
 	########## Second figure axis ##########
 	ax2 = fig.add_subplot(1, 2, 2, projection='3d')
 	set_axes_equal(ax1,ax2)
-	proj1 = projection.pointcloud(snap1)
-	pointcloud1 = proj1.project_to_mesh(terrain, convert=True)
-	ax2.scatter(*pointcloud1)
+
+	# pointcloud = projection.pointcloud(snap1)
+	# ground_cloud = projection.points_to_pointcloud(pointcloud.project_to_ground())
+	# ax2.scatter(*ground_cloud)
+
+	# pointcloud = projection.pointcloud(snap1)
+	# box_cloud = projection.points_to_pointcloud(pointcloud.penetrate_plane(*box, camera_pov=False))
+	# ax2.scatter(*box_cloud)
+
+	proj2 = projection.pointcloud(snap1)
+	pointcloud2 = proj2.project_to_plane(*box, ground, camera_pov=False)
+	box_cloud = projection.points_to_pointcloud(pointcloud2)
+	ax2.scatter(*box_cloud)
 
 
 	plt.show()
-
-
-
-
-
-	# # fig = plt.figure(figsize=plt.figaspect(0.5))
-	# fig = plt.figure(figsize=(16, 8))
-	# specs = {"xmax":30, "ymax":20, "focalx":15, "focaly":10, "focalz":2} # units of pixel except for focalz ....
-
-	# ########## First figure axis ##########
-	# ax1 = fig.add_subplot(1, 2, 1, projection='3d')
-	# ground = world.ground(100,100)
-	# plot_world(ax1, ground)
-
-
-	# orientation2=(0,-20,0)
-	# snap1 = camera.snap(20, 0, 50, *orientation2, **specs)
-	# plot_camera(ax1, snap1, True)
-	# set_bounds(ax1)
-
-
-	# ########## Second figure axis ##########
-	# ax2 = fig.add_subplot(1, 2, 2, projection='3d')
-	# set_axes_equal(ax1,ax2)
-
-	# proj2 = projection.pointcloud(snap1)
-	# pointcloud2 = proj2.project_to_plane(*box, ground, camera_pov=False)
-	# box_cloud = projection.points_to_pointcloud(pointcloud2)
-	# ax2.scatter(*box_cloud)
-
-
-	# plt.show()
-
-
-
 
 if __name__== "__main__":
 	render()
