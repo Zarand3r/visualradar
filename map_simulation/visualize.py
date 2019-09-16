@@ -11,6 +11,7 @@ import camera
 import world
 import projection
 import reconstruction
+import external
 from itertools import product, combinations
 from stl import mesh
 
@@ -103,10 +104,6 @@ def plot_camera(figure, snap, plotrays=True):
 		for line in lines:
 			figure.plot(line[0], line[1], line[2])
 
-
-# def plot_projection(rays, figure):
-#	visualize point cloud, calculate depth estimate, reconstruct terrain
-
 def test1():
 	# fig = plt.figure(figsize=plt.figaspect(0.5))
 	fig = plt.figure(figsize=(16, 8))
@@ -163,7 +160,7 @@ def test2():
 
 	plt.show()
 
-def render():
+def test3():
 
 	terrain = "terrains/griffith.stl"
 	fig = plt.figure(figsize=(16, 8))
@@ -171,16 +168,17 @@ def render():
 
 	########## First figure axis ##########
 	ax1 = fig.add_subplot(1, 2, 1, projection='3d')
-	# Load the STL files and add the vectors to the plot
 	your_mesh = mesh.Mesh.from_file(terrain)
 	ax1.add_collection3d(mplot3d.art3d.Poly3DCollection(your_mesh.vectors))
-	# Auto scale to the mesh size
 	scale = your_mesh.points.flatten(-1)
 	ax1.auto_scale_xyz(scale, scale, scale)
 
+	orientation1=(0,0,0)
+	snap1 = camera.snap(20, 20, 20, *orientation1, **specs)
 	orientation2=(0,0,0)
-	snap1 = camera.snap(20, 20, 20, *orientation2, **specs)
+	snap2 = camera.snap(30, 20, 20, *orientation2, **specs)
 	plot_camera(ax1, snap1, True)
+	plot_camera(ax1, snap2, True)
 	set_bounds(ax1)
 
 	########## Second figure axis ##########
@@ -188,45 +186,49 @@ def render():
 	set_axes_equal(ax1,ax2)
 	proj1 = projection.pointcloud(snap1)
 	pointcloud1 = proj1.project_to_mesh(terrain, convert=True)
+	proj2 = projection.pointcloud(snap2)
+	pointcloud2 = proj2.project_to_mesh(terrain, convert=True)
 	ax2.scatter(*pointcloud1)
-
+	ax2.scatter(*pointcloud2)
 
 	plt.show()
 
 
 
+def render(terrain, cameras, pointclouds):
+	fig = plt.figure(figsize=(16, 8))
 
+	########## First figure axis ##########
+	ax1 = fig.add_subplot(1, 2, 1, projection='3d')
+	terrain_mesh = mesh.Mesh.from_file(terrain)
+	ax1.add_collection3d(mplot3d.art3d.Poly3DCollection(terrain_mesh.vectors))
+	scale = terrain_mesh.points.flatten(-1)
+	ax1.auto_scale_xyz(scale, scale, scale)
 
-	# # fig = plt.figure(figsize=plt.figaspect(0.5))
-	# fig = plt.figure(figsize=(16, 8))
-	# specs = {"xmax":30, "ymax":20, "focalx":15, "focaly":10, "focalz":2} # units of pixel except for focalz ....
+	for snap in cameras:
+		plot_camera(ax1, snap, True)
+	set_bounds(ax1)
 
-	# ########## First figure axis ##########
-	# ax1 = fig.add_subplot(1, 2, 1, projection='3d')
-	# ground = world.ground(100,100)
-	# plot_world(ax1, ground)
+	########## Second figure axis ##########
+	ax2 = fig.add_subplot(1, 2, 2, projection='3d')
+	set_axes_equal(ax1,ax2)
 
-
-	# orientation2=(0,-20,0)
-	# snap1 = camera.snap(20, 0, 50, *orientation2, **specs)
-	# plot_camera(ax1, snap1, True)
-	# set_bounds(ax1)
-
-
-	# ########## Second figure axis ##########
-	# ax2 = fig.add_subplot(1, 2, 2, projection='3d')
-	# set_axes_equal(ax1,ax2)
-
-	# proj2 = projection.pointcloud(snap1)
-	# pointcloud2 = proj2.project_to_plane(*box, ground, camera_pov=False)
-	# box_cloud = projection.points_to_pointcloud(pointcloud2)
-	# ax2.scatter(*box_cloud)
-
-
-	# plt.show()
-
+	for pointcloud in pointclouds:
+		ax2.scatter(*pointcloud)
+	
+	plt.show()
 
 
 
 if __name__== "__main__":
-	render()
+	terrain = "terrains/griffith.stl"
+	specs = {"xmax":30, "ymax":20, "focalx":15, "focaly":10, "focalz":2} # units of pixel except for focalz ....
+
+	sim = external.simulator(terrain, **specs)
+	sim.add_camera(20,20,20,0,0,0)
+	sim.add_camera(30,20,20,0,0,0)
+	cameras = sim.get_cameras()
+	pointclouds = sim.get_pointclouds()
+
+	render(terrain, cameras, pointclouds)
+
