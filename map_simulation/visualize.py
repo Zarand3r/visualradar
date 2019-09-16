@@ -11,7 +11,6 @@ import camera
 import world
 import projection
 import reconstruction
-import external
 from itertools import product, combinations
 from stl import mesh
 
@@ -224,11 +223,15 @@ if __name__== "__main__":
 	terrain = "terrains/griffith.stl"
 	specs = {"xmax":30, "ymax":20, "focalx":15, "focaly":10, "focalz":2} # units of pixel except for focalz ....
 
-	sim = external.simulator(terrain, **specs)
-	sim.add_camera(20,20,20,0,0,0)
-	sim.add_camera(30,20,20,0,0,0)
-	cameras = sim.get_cameras()
-	pointclouds = sim.get_pointclouds()
+	orientation1=(0,0,0)
+	snap1 = camera.snap(20, 20, 20, *orientation1, **specs)
+	orientation2=(0,0,0)
+	snap2 = camera.snap(30, 20, 20, *orientation2, **specs)
 
-	render(terrain, cameras, pointclouds)
+	proj1 = projection.pointcloud(snap1)
+	pointcloud1 = proj1.project_to_mesh(terrain, convert=True)
+	proj2 = projection.pointcloud(snap2)
+	pointcloud2 = proj2.project_to_mesh(terrain, convert=True)
+
+	render(terrain, [snap1, snap2], [pointcloud1, pointcloud2])
 
