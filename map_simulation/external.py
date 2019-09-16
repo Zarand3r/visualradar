@@ -19,6 +19,8 @@ camera_pov = True means pointcloud is returned in camera coordinates
 camera_pov = False means pointcloud is returned in world coordinates
 convert = True means point cloud is returned as three separate x, y, and z coordinate lists
 convert = False means point cloud is returned as a single list of (x,y,z) coordinate tuples
+set_trajectory generates camera objects in between the latest camera position and a specified final position
+the number camera objects generated in between is determined by the frames parameter
 '''
 class simulator:
 	def __init__(self, terrain, **specs):
@@ -34,6 +36,20 @@ class simulator:
 		self.cameras.append(snap)
 		proj = projection.pointcloud(snap)
 		self.projections.append(proj)
+
+	def set_trajectory(self, final_x, final_y, final_z, final_rotx, final_roty, final_rotz, frames=3):
+		current = self.cameras[-1]
+		dx = (final_x-current.X_pos)/frames
+		dy = (final_y-current.Y_pos)/frames
+		dz = (final_z-current.Z_pos)/frames
+		drx = (final_rotx-current.theta)/frames
+		dry = (final_roty-current.phi)/frames
+		drz = (final_rotz-current.gamma)/frames
+
+		for i in range(frames):
+			self.add_camera(current.X_pos+dx, current.Y_pos+dy, current.Z_pos+dz, current.theta+drx, current.phi+dry, current.gamma+drz)
+			current = self.cameras[-1]
+
 
 	def get_cameras(self):
 		return self.cameras
@@ -110,8 +126,9 @@ if __name__== "__main__":
 	# Simulation example
 	specs = {"xmax":30, "ymax":20, "focalx":15, "focaly":10, "focalz":2} # units of pixel except for focalz ....
 	sim = simulator(terrain, **specs)
+	sim.add_camera(20,10,20,0,0,0)
 	sim.add_camera(20,20,20,0,0,0)
-	sim.add_camera(30,20,20,0,0,0)
+	# sim.set_trajectory(30,40,10,0,-10,0)
 	cameras = sim.get_cameras()
 	pointclouds = sim.get_pointclouds()
 	sim.plot()
