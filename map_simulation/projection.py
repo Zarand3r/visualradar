@@ -128,6 +128,11 @@ def ray_intersect_plane(source, vertices, ray_vector): ########
 
 	return Psi
 
+def ray_intersect_mesh(terrain, point1, point2):
+	caster = pycaster.rayCaster.fromSTL(terrain, scale=1)
+	intersects = caster.castRay(point1, point2)
+	return intersects
+
 def plane_bounds(vertices):
 	minx = min(vertex[0] for vertex in vertices)
 	maxx = max(vertex[0] for vertex in vertices)
@@ -161,6 +166,15 @@ def closest_point(point1, *points):
 				dist = squared_distance_point(point1, closest)
 	return closest
 
+def furthest_point(point1, *points):
+	furthest = points[0]
+	dist = squared_distance_point(point1, furthest)
+	if len(points) > 1:
+		for point in points:
+			if squared_distance_point(point1, point) > dist:
+				furthest = point 
+				dist = squared_distance_point(point1, furthest)
+	return furthest
 
 
 ####### HELPER FUNCTIONS #######
