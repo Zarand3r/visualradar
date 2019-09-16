@@ -5,7 +5,6 @@ import random
 import camera
 import world
 import projection
-import reconstruction
 import visualize
 from itertools import product, combinations
 from stl import mesh

@@ -10,7 +10,6 @@ import random
 import camera
 import world
 import projection
-import reconstruction
 from itertools import product, combinations
 from stl import mesh
 
