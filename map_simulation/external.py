@@ -7,6 +7,7 @@ import world
 import projection
 import visualize
 from itertools import product, combinations
+import stl
 from stl import mesh
 
 
@@ -114,24 +115,49 @@ def trace_many_rays(terrain, sources, vectors):
 		points.append(point)
 	return points
 
+# def get_dimensions(terrain):
+# 	terrain_mesh = mesh.Mesh.from_file(terrain)
+# 	terrain_points = terrain_mesh.points[]
+
+def find_mins_maxs(terrain):
+	terrain_mesh = mesh.Mesh.from_file(terrain)
+	minx = maxx = miny = maxy = minz = maxz = None
+	for p in terrain_mesh.points:
+		# p contains (x, y, z)
+		if minx is None:
+			minx = p[stl.Dimension.X]
+			maxx = p[stl.Dimension.X]
+			miny = p[stl.Dimension.Y]
+			maxy = p[stl.Dimension.Y]
+			minz = p[stl.Dimension.Z]
+			maxz = p[stl.Dimension.Z]
+		else:
+			maxx = max(p[stl.Dimension.X], maxx)
+			minx = min(p[stl.Dimension.X], minx)
+			maxy = max(p[stl.Dimension.Y], maxy)
+			miny = min(p[stl.Dimension.Y], miny)
+			maxz = max(p[stl.Dimension.Z], maxz)
+			minz = min(p[stl.Dimension.Z], minz)
+	return minx, maxx, miny, maxy, minz, maxz
+
 if __name__== "__main__":
 	terrain = "terrains/griffith.stl"
 
-	# Ray tracing example 
-	points = [[0,0,0],[1,1,1]]
-	vectors = [[0,0,1],[1,1,1]]
-	intersects = trace_many_rays(terrain, points, vectors)
-	print(intersects)
+	# # Ray tracing example 
+	# points = [[0,0,0],[1,1,1]]
+	# vectors = [[0,0,1],[1,1,1]]
+	# intersects = trace_many_rays(terrain, points, vectors)
+	# print(intersects)
 
-	# Simulation example
-	specs = {"xmax":30, "ymax":20, "focalx":15, "focaly":10, "focalz":2} # units of pixel except for focalz ....
-	sim = simulator(terrain, **specs)
-	sim.add_camera(20,10,20,0,0,0)
-	sim.add_camera(20,20,20,0,0,0)
-	# sim.set_trajectory(30,40,10,0,-10,0)
-	cameras = sim.get_cameras()
-	pointclouds = sim.get_pointclouds()
-	sim.plot()
-
+	# # Simulation example
+	# specs = {"xmax":30, "ymax":20, "focalx":15, "focaly":10, "focalz":2} # units of pixel except for focalz ....
+	# sim = simulator(terrain, **specs)
+	# sim.add_camera(20,10,20,0,0,0)
+	# sim.add_camera(20,20,20,0,0,0)
+	# # sim.set_trajectory(30,40,10,0,-10,0)
+	# cameras = sim.get_cameras()
+	# pointclouds = sim.get_pointclouds()
+	# sim.plot()
+	print(find_mins_maxs(terrain))
 
 
