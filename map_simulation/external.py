@@ -115,9 +115,6 @@ def trace_many_rays(terrain, sources, vectors):
 		points.append(point)
 	return points
 
-# def get_dimensions(terrain):
-# 	terrain_mesh = mesh.Mesh.from_file(terrain)
-# 	terrain_points = terrain_mesh.points[]
 
 def find_mins_maxs(terrain):
 	terrain_mesh = mesh.Mesh.from_file(terrain)
