@@ -1,21 +1,21 @@
+import external
+import numpy
 import rosbag
-from std_msgs.msg import Int32, String
 
 
-def make_bag_file():
-	# bag = rosbag.Bag('test.bag', 'w')
+def make_bag_file(filename, msg):
+	try:
+		bag = rosbag.Bag(filename, 'a')
+	except:
+		bag = rosbag.Bag(filename, 'w')
 
-	# try:
-	#     s = String()
-	#     s.data = 'foo'
+	try:
+	    # i = Int32()
+	    # i.data = 42
 
-	#     i = Int32()
-	#     i.data = 42
-
-	#     bag.write('chatter', s)
-	#     bag.write('numbers', i)
-	# finally:
-	#     bag.close()
+	    bag.write('pointcloud', msg)
+	finally:
+	    bag.close()
 	return
 
 # Author: Jon Binney
@@ -130,3 +130,18 @@ def xyzrgb_array_to_pointcloud2(points, colors, stamp=None, frame_id=None, seq=N
     msg.data = xyzrgb.tostring()
 
     return msg
+
+
+if __name__== "__main__":
+	terrain = "terrains/griffith.stl"
+	# Simulation example
+	specs = {"xmax":30, "ymax":20, "focalx":15, "focaly":10, "focalz":2} # units of pixel except for focalz ....
+	sim = external.simulator(terrain, **specs)
+	sim.add_camera(20,10,20,0,0,0)
+	# sim.add_camera(20,20,20,0,0,0)
+	# sim.set_trajectory(30,40,10,0,-10,0)
+	cameras = sim.get_cameras()
+	points = sim.get_pointclouds(convert=False)
+	points = np.array(points)
+	pointsmessage = xyz_array_to_pointcloud2(points)
+	make_bag_file("test", pointsmessage)

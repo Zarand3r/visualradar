@@ -6,6 +6,7 @@ import camera
 import world
 import projection
 import visualize
+import exporter
 from itertools import product, combinations
 import stl
 from stl import mesh
@@ -30,6 +31,12 @@ class simulator:
 		self.cameras = []
 		self.projections = []
 		self.pointclouds = []
+		self.filename = ''
+		# if filename:
+		# 	self.export = True
+
+	def export_to_bag(self, filename):
+		self.filename = filename
 
 	def add_camera(self, x, y, z, rotx, roty, rotz):
 		orientation = (rotx,roty,rotz)
@@ -37,6 +44,10 @@ class simulator:
 		self.cameras.append(snap)
 		proj = projection.pointcloud(snap)
 		self.projections.append(proj)
+		if self.filename:
+			pointcloud = proj.project_to_mesh(self.terrain, camera_pov=False, convert=False)
+			pointsmessage = exporter.xyz_array_to_pointcloud2(pointcloud)
+			exporter.make_bag_file(self.filename, pointsmessage)
 
 	def set_trajectory(self, final_x, final_y, final_z, final_rotx, final_roty, final_rotz, frames=3):
 		current = self.cameras[-1]
@@ -137,6 +148,7 @@ def find_mins_maxs(terrain):
 			minz = min(p[stl.Dimension.Z], minz)
 	return minx, maxx, miny, maxy, minz, maxz
 
+
 if __name__== "__main__":
 	terrain = "terrains/griffith.stl"
 
@@ -146,15 +158,15 @@ if __name__== "__main__":
 	# intersects = trace_many_rays(terrain, points, vectors)
 	# print(intersects)
 
-	# # Simulation example
-	# specs = {"xmax":30, "ymax":20, "focalx":15, "focaly":10, "focalz":2} # units of pixel except for focalz ....
-	# sim = simulator(terrain, **specs)
-	# sim.add_camera(20,10,20,0,0,0)
-	# sim.add_camera(20,20,20,0,0,0)
-	# # sim.set_trajectory(30,40,10,0,-10,0)
-	# cameras = sim.get_cameras()
-	# pointclouds = sim.get_pointclouds()
+	# Simulation example
+	specs = {"xmax":30, "ymax":20, "focalx":15, "focaly":10, "focalz":2} # units of pixel except for focalz ....
+	sim = simulator(terrain, **specs)
+	sim.export_to_bag("bagfiles/test1.bag")
+	sim.add_camera(20,10,20,0,0,0)
+	sim.add_camera(20,20,20,0,0,0)
+	# sim.set_trajectory(30,40,10,0,-10,0)
+	cameras = sim.get_cameras()
+	pointclouds = sim.get_pointclouds()
 	# sim.plot()
-	print(find_mins_maxs(terrain))
 
 
