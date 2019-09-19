@@ -3,7 +3,7 @@ import numpy
 import rosbag
 
 
-def make_bag_file(filename, msg):
+def make_bag_file(filename, pointcloud, pose, timestamp=None):
 	try:
 		bag = rosbag.Bag(filename, 'a')
 	except:
@@ -13,7 +13,8 @@ def make_bag_file(filename, msg):
 	    # i = Int32()
 	    # i.data = 42
 
-	    bag.write('pointcloud', msg)
+	    bag.write('pointcloud', pointcloud, timestamp)
+	    bag.write('pose', pose, timestamp)
 	finally:
 	    bag.close()
 	return
