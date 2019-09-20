@@ -27,8 +27,8 @@ set_trajectory generates camera objects in between the latest camera position an
 the number camera objects generated in between is determined by the frames parameter
 '''
 class simulator:
-	def __init__(self, data, camera_pov=True):
-		terrain, xmax, ymax, focalx, focaly, focalz = data
+	def __init__(self, terrain, xmax, ymax, focalx, focaly, focalz, camera_pov = True):
+		self.camera_pov = camera_pov
 		self.terrain = terrain
 		self.specs = {"xmax":xmax, "ymax":ymax, "focalx":focalx, "focaly":focaly, "focalz":focalz}
 		self.cameras = []
@@ -57,8 +57,7 @@ class simulator:
 			pointsmessage = exporter.xyz_array_to_pointcloud2(pointcloud)
 			exporter.make_bag_file(filename, pointsmessage, p, timestamp=timestamp)
 
-	def add_camera(self, data):
-		x, y, z, rotx, roty, rotz, time = data
+	def add_camera(self, x, y, z, rotx, roty, rotz, time):
 		orientation = (rotx,roty,rotz)
 		snap = camera.snap(x, y, z, *orientation, **self.specs)
 		self.cameras.append(snap)
@@ -177,13 +176,13 @@ if __name__== "__main__":
 
 	# Simulation example
 	sim_data = [terrain, 30, 20, 15, 10, 2]
-	sim = simulator(sim_data)
-	sim.add_camera([20,10,20,0,0,0,1])
-	sim.add_camera([20,20,20,0,0,0,10])
+	sim = simulator(*sim_data)
+	sim.add_camera(20,10,20,0,0,0,1)
+	sim.add_camera(20,20,20,0,0,0,10)
 	# sim.set_trajectory(30,40,10,0,-10,0)
 	cameras = sim.get_cameras()
 	pointclouds = sim.get_pointclouds()
-	sim.export_to_bag("bagfiles/test1.bag")
+	# sim.export_to_bag("bagfiles/test1.bag")
 
 
 
