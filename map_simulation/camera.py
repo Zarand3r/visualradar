@@ -132,8 +132,4 @@ class snap:
 			ray = [[self.source_x, self.source_x+delta_x], [self.source_y, self.source_y+delta_y], [self.source_z, 0]]
 			self.rays_to_ground.append(ray)
 
-	# def trace_ray(self):
-
-	# Extract the point cloud from the projected pixels in a separate script for ray projection
-	# Feed ray_list along with the surface information into the ray projection script. Handle infinite slope by taking the point directly below
-	# Call this ray projection script in visualize.py, after creating the camera, the surfaces, and generating the ray_list 
+	
