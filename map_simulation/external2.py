@@ -182,7 +182,7 @@ if __name__== "__main__":
 	# sim.set_trajectory(30,40,10,0,-10,0)
 	cameras = sim.get_cameras()
 	pointclouds = sim.get_pointclouds()
-	# sim.export_to_bag("bagfiles/test1.bag")
+	sim.export_to_bag("bagfiles/test1.bag")
 
 
 
