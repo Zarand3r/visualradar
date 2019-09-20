@@ -27,29 +27,20 @@ set_trajectory generates camera objects in between the latest camera position an
 the number camera objects generated in between is determined by the frames parameter
 '''
 class simulator:
-	def __init__(self, data):
+	def __init__(self, data, camera_pov=True):
 		terrain, xmax, ymax, focalx, focaly, focalz = data
 		self.terrain = terrain
 		self.specs = {"xmax":xmax, "ymax":ymax, "focalx":focalx, "focaly":focaly, "focalz":focalz}
 		self.cameras = []
+		self.times = []
 		self.projections = []
 		self.pointclouds = []
-		self.filename = ''
+		self.camera_pov = camera_pov
 		# if filename:
 		# 	self.export = True
 
 	def export_to_bag(self, filename):
-		self.filename = filename
-
-	def add_camera(self, data):
-		x, y, z, rotx, roty, rotz, time = data
-		orientation = (rotx,roty,rotz)
-		snap = camera.snap(x, y, z, *orientation, **self.specs)
-		self.cameras.append(snap)
-		proj = projection.pointcloud(snap)
-		self.projections.append(proj)
-		if self.filename:
-			timestamp = rospy.Time.from_sec(time)
+		for index, snap in enumerate(self.cameras):
 			# this can go into an exporter function that takes snap as argument
 			p = Pose()
 			p.position.x = snap.X_pos
@@ -59,9 +50,21 @@ class simulator:
 			p.orientation.y = snap.phi
 			p.orientation.z = snap.gamma
 			p.orientation.w = 1.0
-			pointcloud = proj.project_to_mesh(self.terrain, camera_pov=True, convert=False)
+			time = self.times[index]
+			timestamp = rospy.Time.from_sec(time)
+			proj = self.projections[index]
+			pointcloud = proj.project_to_mesh(self.terrain, camera_pov=self.camera_pov, convert=False)
 			pointsmessage = exporter.xyz_array_to_pointcloud2(pointcloud)
-			exporter.make_bag_file(self.filename, pointsmessage, p, timestamp=timestamp)
+			exporter.make_bag_file(filename, pointsmessage, p, timestamp=timestamp)
+
+	def add_camera(self, data):
+		x, y, z, rotx, roty, rotz, time = data
+		orientation = (rotx,roty,rotz)
+		snap = camera.snap(x, y, z, *orientation, **self.specs)
+		self.cameras.append(snap)
+		self.times.append(time)
+		proj = projection.pointcloud(snap)
+		self.projections.append(proj)			
 
 	def set_trajectory(self, final_x, final_y, final_z, final_rotx, final_roty, final_rotz, frames=3):
 		current = self.cameras[-1]
@@ -175,12 +178,12 @@ if __name__== "__main__":
 	# Simulation example
 	sim_data = [terrain, 30, 20, 15, 10, 2]
 	sim = simulator(sim_data)
-	sim.export_to_bag("bagfiles/test2.bag")
 	sim.add_camera([20,10,20,0,0,0,1])
 	sim.add_camera([20,20,20,0,0,0,10])
 	# sim.set_trajectory(30,40,10,0,-10,0)
 	cameras = sim.get_cameras()
 	pointclouds = sim.get_pointclouds()
-	# sim.plot()
+	sim.export_to_bag("bagfiles/test1.bag")
+
 
 
